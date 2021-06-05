@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useReducer } from "react";
+import React, { useState, useEffect, useRef, useReducer } from "react";
 
 import Card from "../UI/Card/Card";
 import classes from "./Login.module.css";
@@ -32,15 +32,15 @@ const Login = (props) => {
   // const [passwordIsValid, setPasswordIsValid] = useState();
   const [formIsValid, setFormIsValid] = useState(false);
 
-  const [emailState, dispatchEmail] = useReducer(
-    emailReducer,
-    { value: "", isValid: false }
-  );
+  const [emailState, dispatchEmail] = useReducer(emailReducer, {
+    value: "",
+    isValid: false,
+  });
 
-  const [pwdState, dispatchPwd] = useReducer(
-    pwdReducer,
-    { value: "", isValid: false }
-  );
+  const [pwdState, dispatchPwd] = useReducer(pwdReducer, {
+    value: "",
+    isValid: false,
+  });
 
   // useEffect(() => {
   //   console.log("EFFECT RUNNING");
@@ -51,20 +51,18 @@ const Login = (props) => {
   // }, []);
 
   //object destructuring with specific property
-  const {isvalid: emailIsValid} = emailState;
-  const {isValid: pwdIsValid} = pwdState;
+  const { isvalid: emailIsValid } = emailState;
+  const { isValid: pwdIsValid } = pwdState;
 
   //useEffect based on email and pwd valid state makes it more efficient.
   useEffect(() => {
     const identifier = setTimeout(() => {
-      console.log('Checking form validity!');
-      setFormIsValid(
-        emailIsValid && pwdIsValid
-      );
+      console.log("Checking form validity!");
+      setFormIsValid(emailIsValid && pwdIsValid);
     }, 500);
 
     return () => {
-      console.log('CLEANUP');
+      console.log("CLEANUP");
       clearTimeout(identifier);
     };
   }, [emailIsValid, pwdIsValid]);
@@ -75,7 +73,7 @@ const Login = (props) => {
     setFormIsValid(
       emailState.value.includes("@") && pwdState.value.trim().length > 6
     );
- 
+
     // setEnteredEmail(event.target.value);
 
     // setFormIsValid(
@@ -85,7 +83,9 @@ const Login = (props) => {
 
   const passwordChangeHandler = (event) => {
     dispatchPwd({ type: "USER_INPUT", val: event.target.value });
-    setFormIsValid(emailState.value.includes("@") && pwdState.value.trim().length > 6);
+    setFormIsValid(
+      emailState.value.includes("@") && pwdState.value.trim().length > 6
+    );
 
     // setEnteredPassword(event.target.value);
 
@@ -105,38 +105,51 @@ const Login = (props) => {
     // setPasswordIsValid(enteredPassword.trim().length > 6);
   };
 
+  const emailRef = useRef();
+  const pwdRef = useRef();
+
   const submitHandler = (event) => {
     event.preventDefault();
-    // props.onLogin(enteredEmail, enteredPassword);
-    props.onLogin(emailState.value, pwdState.value);
+
+    if (formIsValid) {
+      // props.onLogin(enteredEmail, enteredPassword);
+      props.onLogin(emailState.value, pwdState.value);
+    } else if (!formIsValid) {
+      if (!emailState.isValid) {
+        emailRef.current.focus();
+      } else {
+        pwdRef.current.focus();
+      }
+    }
   };
 
   return (
     <Card className={classes.login}>
       <form onSubmit={submitHandler}>
+        <Input
+          ref={emailRef}
+          type="email"
+          id="email"
+          label="email"
+          isValid={emailState.isValid}
+          value={emailState.val}
+          onChangeHandler={emailChangeHandler}
+          onBlurHandler={validateEmailHandler}
+        />
 
-          <Input
-            type="email"
-            id="email"
-            label="email"
-            isValid={emailState.isValid}
-            value={emailState.val}
-            onChangeHandler={emailChangeHandler}
-            onBlurHandler={validateEmailHandler}
-          />
-  
-          <Input
-            type="password"
-            id="password"
-            label="Password"
-            isValid={pwdState.isValid}
-            value={pwdState.val}
-            onChangeHandler={passwordChangeHandler}
-            onBlurHandler={validatePasswordHandler}
-          />
+        <Input
+          ref={pwdRef}
+          type="password"
+          id="password"
+          label="Password"
+          isValid={pwdState.isValid}
+          value={pwdState.val}
+          onChangeHandler={passwordChangeHandler}
+          onBlurHandler={validatePasswordHandler}
+        />
 
         <div className={classes.actions}>
-          <Button type="submit" className={classes.btn} disabled={!formIsValid}>
+          <Button type="submit" className={classes.btn} >
             Login
           </Button>
         </div>
